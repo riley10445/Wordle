@@ -1,6 +1,5 @@
 import random
 import math
-from main import input_digits
 
 
 def create_number():
