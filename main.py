@@ -1,5 +1,6 @@
 import pygame
-import logic
+import random
+from math import floor
 from sys import exit
 
 
@@ -35,12 +36,66 @@ class AnswerTile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=coords)
 
 
+class GreenTile(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__()
+        self.image = pygame.Surface((86, 86))
+        self.image.fill('springgreen3')
+        self.rect = self.image.get_rect(topleft=coords)
+
+
+class YellowTile(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__()
+        self.image = pygame.Surface((86, 86))
+        self.image.fill('yellow3')
+        self.rect = self.image.get_rect(topleft=coords)
+
+
+def load_words(file_path):
+    with open(file_path, 'r') as file:
+        words = file.read().splitlines()  # Read words into a list, removing any trailing newline characters
+    return words
+
+
 def draw_previous(previous):
-    base = [55, 22]
+    base = [50, 35]
     for row_index, answer in enumerate(previous):
         for letter_index, letter in enumerate(answer):
-            answer_surface = font.render(letter, True, 'white')
-            screen.blit(answer_surface, (base[0] + (letter_index * 100), base[1] + (row_index * 120)))
+            answer_surface = font.render(letter, True, 'black')
+            screen.blit(answer_surface, (base[0]+(letter_index*100), base[1]+(row_index*120)))
+
+
+def draw_correct(correct):
+    correct = correct.upper()
+    base = [50, 635]
+    for num in range(5):
+        answer_surface = font.render(correct[num], True, 'white')
+        screen.blit(answer_surface, (base[0]+(num*100), base[1]))
+
+green_wins = pygame.sprite.Group()
+yellow_wins = pygame.sprite.Group()
+def create_colored_tiles(itemized_list):
+    base = [32, 22]
+    for num in range(len(itemized_list)):
+        row = floor(num/5)
+        column = num % 5
+        if itemized_list[num] == 1:
+            yellow_wins.add(YellowTile((base[0]+(column*100), base[1]+(row*120))))
+        if itemized_list[num] == 2:
+            green_wins.add(GreenTile((base[0]+(column*100), base[1]+(row*120))))
+
+
+def check_input(word_input, correct, item_list):
+    word_lower = word_input.lower()
+    for num in range(5):
+        if word_lower[num] in correct:
+            if word_lower[num] != correct[num]:
+                item_list.append(1)
+            elif word_lower[num] == correct[num]:
+                item_list.append(2)
+        else:
+            item_list.append(0)
 
 
 pygame.init()
@@ -48,7 +103,7 @@ pygame.display.set_caption('Numberdle')
 screen = pygame.display.set_mode((550, 800))
 screen.fill('gray20')
 clock = pygame.time.Clock()
-font = pygame.font.Font('Cabal-w5j3.ttf', 70)
+font = pygame.font.Font('Swansea-q3pd.ttf', 70)
 
 
 shadow_wins = pygame.sprite.Group()
@@ -90,10 +145,15 @@ for x in range(5):
     x_start += 100
 
 typed = ''
-base_position = [55, 22]
+base_position = [50, 35]
 row_num = 1
 previous_answers = []
+itemized_values = []
 
+file_path = 'sgb-words.txt'
+words = load_words(file_path)
+correct_word = random.choice(words)
+print(correct_word)
 
 while True:
     shadow_wins.draw(screen)
@@ -107,20 +167,27 @@ while True:
         elif event.type == pygame.KEYDOWN and row_num < 6:
             if event.key == pygame.K_BACKSPACE:
                 typed = typed[:-1]
-                print(typed)
             elif len(typed) < 5:
-                if event.unicode.isprintable():
+                if event.unicode.isalpha():
                     typed += event.unicode.upper()
-                    print(typed)
             elif len(typed) == 5 and event.key == pygame.K_RETURN:
-                previous_answers.append(typed)
-                typed = ''
-                row_num += 1
-                base_position[0] = 55
-                base_position[1] += 120
+                if typed.lower() not in words or typed in previous_answers:
+                    typed = ''
+                else:
+                    previous_answers.append(typed)
+                    check_input(typed, correct_word, itemized_values)
+                    typed = ''
+                    row_num += 1
+                    base_position[0] = 50
+                    base_position[1] += 120
+    if row_num == 6:
+        draw_correct(correct_word)
+    create_colored_tiles(itemized_values)
+    yellow_wins.draw(screen)
+    green_wins.draw(screen)
     draw_previous(previous_answers)
     for i, char in enumerate(typed):
-        text_surface = font.render(char, True, 'white')
+        text_surface = font.render(char, True, 'black')
         screen.blit(text_surface, (base_position[0] + (i * 100), base_position[1]))
     pygame.display.update()
     clock.tick(60)
