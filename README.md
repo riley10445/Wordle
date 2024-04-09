@@ -20,7 +20,7 @@ To play Numberdle, follow these steps:
 1. Install Python on your computer if you haven't already (https://www.python.org/downloads/).
 2. Clone or download the Numberdle repository from GitHub (https://github.com/yourusername/numberdle).
 3. Navigate to the project directory in your terminal or command prompt.
-4. Run the `numberdle.py` script using Python: `python numberdle.py`.
+4. Run the `main.py` script using Python: `python main.py`.
 5. Enjoy playing Numberdle and start guessing words!
 
 ## Controls
